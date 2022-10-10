@@ -1,0 +1,35 @@
+﻿<Window x:Class="AudioVideoPlay.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AudioVideoPlay"
+        mc:Ignorable="d"
+        Title="AudioVideoPlayer" 
+		WindowState="Normal"
+		Loaded="Window_Loaded"
+		MouseEnter="Window_MouseEnter"
+		MouseLeave="Window_MouseLeave"
+		ResizeMode="CanResize"
+		
+		>
+
+	<StackPanel>
+		<StackPanel x:Name="sideBar" Width="200" HorizontalAlignment="Left">
+			<Label Content="Side bar" FontSize="20"/>
+		</StackPanel>
+		
+		<StackPanel 
+			x:Name="bottomTab"
+			Margin="200,0,0,0"
+			HorizontalAlignment="Left"
+			Background="DarkGreen"
+			
+			Height="285"
+			Width="400"
+			>
+			
+		</StackPanel>
+
+	</StackPanel>
+</Window>
