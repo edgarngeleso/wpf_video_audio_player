@@ -12,7 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.IO;
-
+using System.Data;
+using AudioVideoPlay.screens;
 
 namespace AudioVideoPlay
 {
@@ -26,73 +27,162 @@ namespace AudioVideoPlay
 			InitializeComponent();
 		}
 
-		/*private long CurrentPosition = 0;
+		private long CurrentPosition = 0;
+		private int CurrentFileIndex = 0;
 		private double duration = 0;
 		private bool IsPlaying = false;
+		private DataTable filesDataTable = new DataTable();
+		
+		private double screenWidth = System.Windows.SystemParameters.PrimaryScreenWidth;
+		private double screenHeight = System.Windows.SystemParameters.PrimaryScreenHeight;
 
-		private void Play_Click(object sender, RoutedEventArgs e)
+		private void CreateListData()
 		{
-			//MessageBox.Show("Playing....");
+			filesDataTable.Columns.Add("ID", typeof(int));
+			filesDataTable.Columns.Add("fileName");
+			filesDataTable.Columns.Add("filePath");
+		}
 
-			//this.media.Position = System.TimeSpan.FromSeconds(this.startPosition);
-			if (this.IsPlaying == false)
+
+		private void Window_Loaded(object sender, RoutedEventArgs e)
+		{
+			this.CreateListData();
+			this.media.Width = this.screenWidth+100;
+			this.media.Height = this.screenHeight;
+			this.sideBar.Height = this.screenHeight;
+			this.sideBar.Margin = new Thickness(0,-this.screenHeight,0,0);
+			this.bottomTab.Width = this.screenWidth - 200;
+			this.bottomTab.Margin = new Thickness(200, -190, 0, 0);
+		}
+
+		private void Window_MouseEnter(object sender, MouseEventArgs e)
+		{
+			
+			this.bottomTab.Opacity = 1;
+			this.sideBar.Opacity = 1;
+			this.mediaName.Opacity = 1;
+		}
+
+		private void Window_MouseLeave(object sender, MouseEventArgs e)
+		{
+			this.bottomTab.Opacity = 0;
+			this.sideBar.Opacity = 0;
+			this.mediaName.Opacity = 0;
+		}
+
+
+		private void PlayPause_Click(object sender, RoutedEventArgs e)
+		{
+			this.Play_Pause();
+		}
+
+		private void Play_Pause()
+		{
+			if (this.IsPlaying)
 			{
-				this.media.Volume = 100;
-				this.media.Play();
-				this.IsPlaying = true;
+				this.media.Pause();
+				this.playPauseImage.Source = new BitmapImage(new Uri(@"/assets/play.png", UriKind.Relative));
+				this.IsPlaying = false;
 			}
 			else
 			{
-				this.media.Pause();
-				this.IsPlaying = false;
-			}
-			
-		}
 
+				this.media.Play();
+				this.playPauseImage.Source = new BitmapImage(new Uri(@"/assets/pause.png", UriKind.Relative));
+				this.IsPlaying = true;
+			}
+		}
 
 		private void Stop_Click(object sender, RoutedEventArgs e)
 		{
-			this.IsPlaying = false;
-			this.slider.Value = 0;
 			this.media.Stop();
-		}
-
-		private void Pause_Click(object sender, RoutedEventArgs e)
-		{
-			Console.WriteLine("Called.");
 			this.IsPlaying = false;
-			this.media.Pause();
+			this.playPauseImage.Source = new BitmapImage(new Uri(@"/assets/play.png", UriKind.Relative));
+			this.media.Position = System.TimeSpan.FromSeconds(0);
 		}
 
 		private void Media_Loaded(object sender, RoutedEventArgs e)
 		{
-			//this.media.Position = System.TimeSpan.FromSeconds(this.startPosition);
+			this.volumeSlider.Value = 2.5;
 		}
 
-		private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+		private void Next_Click(object sender, RoutedEventArgs e)
 		{
-			double currentPosition = (this.duration / 10) * e.NewValue;
-			this.media.Position = System.TimeSpan.FromSeconds(currentPosition);
-			this.slider.Value = e.NewValue;
+			this.Play_Next();
 		}
 
-		private void Media_MouseEnter(object sender, MouseEventArgs e)
+		private void Play_Next()
 		{
-			
+			this.CurrentFileIndex++;
+			if (this.CurrentFileIndex > this.files.Items.Count - 1)
+			{
+				this.CurrentFileIndex = 0;
+			}
+			this.media.Source = new System.Uri(filesDataTable.Rows[this.CurrentFileIndex]["filePath"].ToString());
+			this.mediaName.Content = filesDataTable.Rows[this.CurrentFileIndex]["fileName"].ToString();
+			this.mediaSlider.Value = 0;
+
+			this.media.Play();
+			this.playPauseImage.Source = new BitmapImage(new Uri(@"/assets/pause.png", UriKind.Relative));
+			this.IsPlaying = true;
 		}
+
+		private void Back_Click(object sender, RoutedEventArgs e)
+		{
+			this.Play_Previous();
+		}
+
+		private void Play_Previous()
+		{
+			if (this.CurrentFileIndex == 0)
+			{
+				this.CurrentFileIndex = this.files.Items.Count - 1;
+			}
+			else
+			{
+				this.CurrentFileIndex--;
+			}
+
+
+			this.media.Source = new System.Uri(filesDataTable.Rows[this.CurrentFileIndex]["filePath"].ToString());
+			this.mediaName.Content = filesDataTable.Rows[this.CurrentFileIndex]["fileName"].ToString();
+			this.mediaSlider.Value = 0;
+
+			this.media.Play();
+			this.playPauseImage.Source = new BitmapImage(new Uri(@"/assets/pause.png", UriKind.Relative));
+			this.IsPlaying = true;
+		}
+
 
 		private void Media_MediaOpened(object sender, RoutedEventArgs e)
 		{
 			this.IsPlaying = true;
 
 			this.duration = this.media.NaturalDuration.TimeSpan.TotalSeconds;
-			this.changinTime.Content = "";
+			this.changinTime.Content = "00:00:00";
 			this.mediaDuration.Content = this.media.NaturalDuration.ToString();
+
+			//Add key down event to the window
+			this.window.KeyDown += new KeyEventHandler(Window_KeyDown);
 		}
 
-		private void AddSongs_Click(object sender, RoutedEventArgs e)
+		private void MediaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
 		{
-			var ofd = new Microsoft.Win32.OpenFileDialog()
+			double currentPosition = (this.duration / 10) * e.NewValue;
+			this.media.Position = System.TimeSpan.FromSeconds(currentPosition);
+			this.mediaSlider.Value = e.NewValue;
+		}
+
+		private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+		{
+			this.media.Volume = e.NewValue/10;
+			this.volumeSlider.Value = e.NewValue;
+		}
+
+		private void AddMedia_Click(object sender, RoutedEventArgs e)
+		{
+			this.selectedFiles.Opacity = 1;
+			/*var ofd = new Microsoft.Win32.OpenFileDialog()
 			{
 				Filter = "Video and Audio files (*.*)|*.*"
 			};
@@ -105,9 +195,9 @@ namespace AudioVideoPlay
 			this.mediaName.Content = this.GetFileName(ofd.FileName);
 
 			this.media.Play();
-			
-
-			Console.WriteLine(this.GetFileName(ofd.FileName));
+			this.playPauseImage.Source = new BitmapImage(new Uri(@"/assets/pause.png", UriKind.Relative));
+			this.IsPlaying = true;
+			*/
 		}
 
 		private string GetFileName(string filePath)
@@ -119,37 +209,214 @@ namespace AudioVideoPlay
 			return outputName;
 		}
 
-		private void ContentControl_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+		private void Container_KeyDown(object sender, KeyEventArgs e)
 		{
-			if (this.IsPlaying == false)
-			{
-				this.media.Volume = 100;
-				this.media.Play();
-				this.IsPlaying = true;
-			}
-			else
-			{
-				this.media.Pause();
-				this.IsPlaying = false;
-			}
-		}*/
-
-		private void Window_Loaded(object sender, RoutedEventArgs e)
-		{
-			//this.media.Width = System.Windows.SystemParameters.PrimaryScreenWidth+100;
-			//this.media.Height = System.Windows.SystemParameters.PrimaryScreenHeight-120;
-			this.sideBar.Height = System.Windows.SystemParameters.PrimaryScreenHeight-500;
-			this.bottomTab.Width = System.Windows.SystemParameters.PrimaryScreenWidth + 200;
+			
+			
 		}
 
-		private void Window_MouseEnter(object sender, MouseEventArgs e)
+		private void Playlist_Click(object sender, RoutedEventArgs e)
 		{
-			//this.mediaName.Foreground = Brushes.Red;
+			this.selectedFiles.Opacity = 1;
+
+
+			var ofd = new Microsoft.Win32.OpenFileDialog()
+			{
+				Filter = "Video and Audio files (*.*)|*.*",
+				Multiselect = true,
+				FilterIndex = 2,
+				RestoreDirectory = true
+			};
+
+			var result = ofd.ShowDialog();
+			Stream stream;
+			if (result == true)
+			{
+				
+				for(var i = 0; i < ofd.FileNames.Length; i++)
+				{
+					try
+					{
+						String file = ofd.FileNames[i];
+						if ((stream = ofd.OpenFile()) != null)
+						{
+							using (stream)
+							{
+								this.filesDataTable.Rows.Add(i,this.GetFileName(file),file);
+								var num = this.files.Items.Count > 0 ? this.files.Items.Count + 1 : 1;
+								this.files.Items.Add($"{num}.{this.GetFileName(file)}");
+							}
+						}
+					}catch(Exception ex)
+					{
+						MessageBox.Show($"Ooops!Unable to read file.Error={ex.Message}");
+						return;
+					}
+				}
+
+				//Play first file if the player isn't playing when a new file is added.
+				if (!IsPlaying && this.CurrentFileIndex==0)
+				{
+					this.media.Source = new System.Uri(filesDataTable.Rows[0]["filePath"].ToString());
+					this.mediaName.Content = filesDataTable.Rows[0]["fileName"].ToString();
+
+					this.media.Play();
+					this.playPauseImage.Source = new BitmapImage(new Uri(@"/assets/pause.png", UriKind.Relative));
+					this.mediaSlider.Value = 0;
+					this.IsPlaying = true;
+				}
+				
+			}
 		}
 
-		private void Window_MouseLeave(object sender, MouseEventArgs e)
+		private void CloseFileList_Click(object sender, RoutedEventArgs e)
 		{
-			//this.mediaName.Foreground = Brushes.Green;
+			this.selectedFiles.Opacity = 0;
+		}
+
+		private void Files_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			Console.WriteLine(this.files.SelectedIndex);
+			this.CurrentFileIndex = this.files.SelectedIndex;
+			this.mediaSlider.Value = 0;
+			//MessageBox.Show($"{filesDataTable.Rows[this.files.SelectedIndex]["fileName"]}");
+
+			this.media.Source = new System.Uri(filesDataTable.Rows[this.CurrentFileIndex]["filePath"].ToString());
+			this.mediaName.Content = filesDataTable.Rows[this.CurrentFileIndex]["fileName"].ToString();
+
+			this.media.Play();
+			this.playPauseImage.Source = new BitmapImage(new Uri(@"/assets/pause.png", UriKind.Relative));
+			this.IsPlaying = true;
+
+			this.selectedFiles.Opacity = 0;
+		}
+
+		private void Media_MediaEnded(object sender, RoutedEventArgs e)
+		{
+			this.CurrentFileIndex++;
+			if (this.CurrentFileIndex > this.files.Items.Count-1)
+			{
+				this.CurrentFileIndex = 0;
+			}
+			
+			this.media.Source = new System.Uri(filesDataTable.Rows[this.CurrentFileIndex]["filePath"].ToString());
+			this.mediaName.Content = filesDataTable.Rows[this.CurrentFileIndex]["fileName"].ToString();
+
+			this.media.Play();
+			this.playPauseImage.Source = new BitmapImage(new Uri(@"/assets/pause.png", UriKind.Relative));
+			this.mediaSlider.Value = 0;
+			this.IsPlaying = true;
+		}
+
+		private void Window_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.Key == Key.Right)
+			{
+				this.mediaSlider.Value+=0.5;
+			}
+			else if (e.Key == Key.Left)
+			{
+				this.mediaSlider.Value-=0.5;
+			}
+			else if (e.Key == Key.Up)
+			{
+				this.volumeSlider.Value += 0.5;
+			}
+			else if (e.Key == Key.Down)
+			{
+				this.volumeSlider.Value -= 0.5;
+			}else if(e.Key == Key.Space)
+			{
+				this.Play_Pause();
+			}else if(e.Key == Key.N)
+			{
+				this.Play_Next();
+			}else if(e.Key == Key.P)
+			{
+				this.Play_Previous();
+			}else if(e.Key == Key.L)
+			{
+
+				if(this.selectedFiles.Opacity == 1)
+				{
+					this.selectedFiles.Opacity = 0;
+				}
+				else
+				{
+					this.selectedFiles.Opacity = 1;
+				}
+			}
+		}
+
+		private void SettingsPage_Click(object sender, RoutedEventArgs e)
+		{
+			Settings settings = new Settings();
+			settings.Show();
+		}
+
+		private void AboutPage_Click(object sender, RoutedEventArgs e)
+		{
+			About about = new About();
+			about.Show();
+		}
+
+		private void GoToPlaylist_Click(object sender, RoutedEventArgs e)
+		{
+			Playlist playlist = new Playlist();
+			playlist.Show();
+		}
+
+		private void AddFiles_Click(object sender, RoutedEventArgs e)
+		{
+			var ofd = new Microsoft.Win32.OpenFileDialog()
+			{
+				Filter = "Video and Audio files (*.*)|*.*",
+				Multiselect = true,
+				FilterIndex = 2,
+				RestoreDirectory = true
+			};
+
+			var result = ofd.ShowDialog();
+			Stream stream;
+			if (result == true)
+			{
+
+				for (var i = 0; i < ofd.FileNames.Length; i++)
+				{
+					try
+					{
+						String file = ofd.FileNames[i];
+						if ((stream = ofd.OpenFile()) != null)
+						{
+							using (stream)
+							{
+								this.filesDataTable.Rows.Add(i, this.GetFileName(file), file);
+								var num = this.files.Items.Count > 0 ? this.files.Items.Count + 1 : 1;
+								this.files.Items.Add($"{num}.{this.GetFileName(file)}");
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+						MessageBox.Show($"Ooops!Unable to read file.Error={ex.Message}");
+						return;
+					}
+				}
+
+
+
+				//Play first file if the player isn't playing when a new file is added.
+				if (!IsPlaying && this.CurrentFileIndex == 0)
+				{
+					this.media.Source = new System.Uri(filesDataTable.Rows[0]["filePath"].ToString());
+					this.mediaName.Content = filesDataTable.Rows[0]["fileName"].ToString();
+
+					this.media.Play();
+					this.playPauseImage.Source = new BitmapImage(new Uri(@"/assets/pause.png", UriKind.Relative));
+					this.mediaSlider.Value = 0;
+					this.IsPlaying = true;
+				}
+			}
 		}
 	}
 }

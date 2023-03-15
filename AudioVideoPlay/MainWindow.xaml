@@ -6,30 +6,248 @@
         xmlns:local="clr-namespace:AudioVideoPlay"
         mc:Ignorable="d"
         Title="AudioVideoPlayer" 
-		WindowState="Normal"
+		WindowState="Maximized"
 		Loaded="Window_Loaded"
 		MouseEnter="Window_MouseEnter"
 		MouseLeave="Window_MouseLeave"
-		ResizeMode="CanResize"
-		
+		ResizeMode="CanResize" d:DesignWidth="1159.463" d:DesignHeight="848.17"
+		x:Name="window"
 		>
 
-	<StackPanel>
-		<StackPanel x:Name="sideBar" Width="200" HorizontalAlignment="Left">
-			<Label Content="Side bar" FontSize="20"/>
-		</StackPanel>
-		
+	<StackPanel
+		x:Name="container"
+		KeyDown="Container_KeyDown">
+		<MediaElement
+			x:Name="media"
+			LoadedBehavior="Manual"
+			Loaded="Media_Loaded"
+			ScrubbingEnabled="True"
+			MediaOpened="Media_MediaOpened"
+			MediaEnded="Media_MediaEnded"
+			Volume="0"
+		/>
+
 		<StackPanel 
-			x:Name="bottomTab"
-			Margin="200,0,0,0"
+			x:Name="sideBar" 
+			Width="200" 
+			Panel.ZIndex="100"
+			Margin="0,0,0,0"
 			HorizontalAlignment="Left"
-			Background="DarkGreen"
-			
-			Height="285"
-			Width="400"
-			>
-			
+			Background="WhiteSmoke">
+
+
+			<Image
+				Source="/assets/profile.png"
+				Height="100"
+				Width="100"
+				Margin="50,20"
+				HorizontalAlignment="Center"
+				/>
+
+			<Button
+				x:Name="addFiles"
+				Click="AddFiles_Click"
+				Background="Transparent"
+				BorderBrush="Transparent"
+				BorderThickness="0" 
+				HorizontalAlignment="Left"
+					
+				>
+				<Label 
+				HorizontalAlignment="Left" 
+				Content="Add" 
+				FontSize="20"/>
+			</Button>
+			<Button
+				x:Name="addMedia"
+				Click="AddMedia_Click"
+				Background="Transparent"
+				BorderBrush="Transparent"
+				BorderThickness="0" 
+				HorizontalAlignment="Left"
+					
+				>
+				<Label
+					HorizontalAlignment="Left"
+					Content="Media" FontSize="20"/>
+			</Button>
+
+			<Button
+				x:Name="goToPlaylist"
+				Click="GoToPlaylist_Click"
+				Background="Transparent"
+				BorderBrush="Transparent"
+				BorderThickness="0"
+				HorizontalAlignment="Left"
+				>
+				<Label 
+					HorizontalAlignment="Left"
+					Content="Playlist" FontSize="20"/>
+			</Button>
+			<Button
+				Click="AddMedia_Click"
+				Background="Transparent"
+				BorderBrush="Transparent"
+				BorderThickness="0"
+				HorizontalAlignment="Left"
+				>
+				<Label 
+					HorizontalAlignment="Left"
+					Content="Stream online" FontSize="20"/>
+			</Button>
+			<Button
+				x:Name="settingsPage"
+				Click="SettingsPage_Click"
+				Background="Transparent"
+				BorderBrush="Transparent"
+				BorderThickness="0"
+				HorizontalAlignment="Left"
+				>
+				<Label 
+					HorizontalAlignment="Left"
+					Content="Settings" FontSize="20"/>
+			</Button>
+			<Button
+				x:Name="aboutPage"
+				Click="AboutPage_Click"
+				Background="Transparent"
+				BorderBrush="Transparent"
+				BorderThickness="0"
+				HorizontalAlignment="Left"
+				>
+				<Label 
+					HorizontalAlignment="Left"
+					Content="About" FontSize="20"/>
+			</Button>
 		</StackPanel>
+
+		<StackPanel 
+			Panel.ZIndex="95"
+			Opacity="0"
+			x:Name="selectedFiles"
+			Height="500"
+			Margin="250,-968,375,0"
+			>
+			<Button 
+				x:Name="closeFileList"
+				Click="CloseFileList_Click"
+				Content="Close"/>
+			<ListBox
+				x:Name="files"
+				ScrollViewer.CanContentScroll="True"
+				Height="400" SelectionChanged="Files_SelectionChanged"
+				
+				/>
+			<Button 
+				Click="Playlist_Click"
+				Content="Add files"/>
+		</StackPanel>
+
+
+		<WrapPanel 
+			x:Name="bottomTab"
+			Opacity="1"
+			Panel.ZIndex="100"
+			HorizontalAlignment="Left"
+			Background="WhiteSmoke"
+			
+			Height="65"
+			Width="941"
+			>
+			<Button 
+				x:Name="playPause"
+				Click="PlayPause_Click"
+				Background="Transparent"
+				BorderBrush="Transparent">
+				<Image 
+					x:Name="playPauseImage"
+					Source="assets/play.png"
+					Width="30"
+					Height="30"/>
+			</Button>
+
+			<Button 
+				x:Name="stop"
+				Click="Stop_Click"
+				Background="Transparent"
+				BorderBrush="Transparent">
+				<Image
+					Source="assets/stop.png"
+					Width="30"
+					Height="30"
+					/>
+			</Button>
+
+			<Button 
+				x:Name="back"
+				Click="Back_Click"
+				Background="Transparent"
+				BorderBrush="Transparent">
+				<Image
+					Source="assets/previous.png"
+					Width="30"
+					Height="30"
+					/>
+			</Button>
+
+			<Button 
+				x:Name="next"
+				Click="Next_Click"
+				Background="Transparent"
+				BorderBrush="Transparent">
+				<Image
+					Source="assets/next.png"
+					Width="30"
+					Height="30"
+					/>
+			</Button>
+
+			<WrapPanel 
+				Width="600"
+				Margin="20,0,0,20"
+				Height="65">
+				<Label 
+					x:Name="changinTime"
+					Content="00:00:00" VerticalAlignment="Center"/>
+				<Slider
+					x:Name="mediaSlider"
+					Width="450"
+					Margin="0,20"
+					VerticalAlignment="Center"
+					ValueChanged="MediaSlider_ValueChanged"
+				/>
+				<Label
+					x:Name="mediaDuration"
+					Content="00:00:00" VerticalAlignment="Center"/>
+			</WrapPanel>
+
+			<WrapPanel 
+				Width="200"
+				Height="65"
+				Margin="10,0,0,0">
+				<Image
+					Source="assets/volume.png"
+					Width="30"
+					Height="30"
+					
+					/>
+				<Slider
+					x:Name="volumeSlider"
+					ValueChanged="VolumeSlider_ValueChanged"
+					Width="150"
+					Height="40"
+					Margin="10,20,0,0"
+					/>
+			</WrapPanel>
+
+		</WrapPanel>
+		<Label 
+			Panel.ZIndex="90"
+			Foreground="Red"
+			x:Name="mediaName" 
+			Margin="0,0,0,0"
+			FontSize="20"
+			Background="Transparent"/>
 
 	</StackPanel>
 </Window>
